@@ -276,16 +276,7 @@ func (r *aliDnsRecordWeightResource) ImportState(ctx context.Context, req resour
 
 func (r *aliDnsRecordWeightResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// If the entire plan is null, the resource is planned for destruction.
-	if req.Plan.Raw.IsNull() {
-		// Return an example warning diagnostic to practitioners.
-		resp.Diagnostics.AddWarning(
-			"Resource Destruction Considerations",
-			"Applying this resource destruction will only remove the resource from the Terraform state "+
-				"and will not call the deletion API due to API limitations. Manually use the web "+
-				"interface to fully destroy this resource.",
-		)
-
-	} else {
+	if !(req.Plan.Raw.IsNull()) {
 		var plan *aliDnsRecordWeightResourceModel
 		getPlanDiags := req.Plan.Get(ctx, &plan)
 		resp.Diagnostics.Append(getPlanDiags...)

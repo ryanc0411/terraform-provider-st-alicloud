@@ -249,9 +249,9 @@ func (p *alicloudProvider) Configure(ctx context.Context, req provider.Configure
 	}
 
 	// AliCloud SLB Client
-	slbCliientConfig := clientCredentialsConfig
-	slbCliientConfig.Endpoint = tea.String("slb.aliyuncs.com")
-	slbClient, err := alicloudSlbClient.NewClient(slbCliientConfig)
+	slbClientConfig := clientCredentialsConfig
+	slbClientConfig.Endpoint = tea.String("slb.aliyuncs.com")
+	slbClient, err := alicloudSlbClient.NewClient(slbClientConfig)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -295,7 +295,8 @@ func (p *alicloudProvider) Configure(ctx context.Context, req provider.Configure
 func (p *alicloudProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewCdnDomainDataSource,
-		NewAntiddosCooDataSource,
+		NewDdosCooInstancesDataSource,
+		NewDdosCooDomainResourcesDataSource,
 		NewSlbLoadBalancersDataSource,
 	}
 }
