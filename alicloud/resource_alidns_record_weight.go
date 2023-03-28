@@ -338,7 +338,7 @@ func (r *aliDnsRecordWeightResource) setWeight(plan *aliDnsRecordWeightResourceM
 		subdomainName := fmt.Sprintf("%s.%s", *responseById.Body.RR, *responseById.Body.DomainName)
 
 		for _, subdomains := range responseByName.Body.SlbSubDomains.SlbSubDomain {
-			if !*subdomains.Open {
+			if subdomainName == *subdomains.SubDomain && !*subdomains.Open {
 
 				// Enable Weight settings
 				setDNSSLBStatusRequest := &alicloudDnsClient.SetDNSSLBStatusRequest{
