@@ -67,15 +67,9 @@ func (r *ramUserGroupAttachmentResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	addUserToGroupRequest := &alicloudRamClient.AddUserToGroupRequest{
-		UserName:  tea.String(plan.UserName.ValueString()),
-		GroupName: tea.String(plan.GroupName.ValueString()),
-	}
-
-	err := r.addUserToGroup(addUserToGroupRequest)
-	if err != nil {
+	if err := r.addUserToGroup(plan); err != nil {
 		resp.Diagnostics.AddError(
-			"[API ERROR] Failed to Add User to Group",
+			"[API ERROR] Failed to Add User to Group.",
 			err.Error(),
 		)
 		return
@@ -155,15 +149,9 @@ func (r *ramUserGroupAttachmentResource) Update(ctx context.Context, req resourc
 		return
 	}
 
-	updateUserGroupRequest := &alicloudRamClient.AddUserToGroupRequest{
-		UserName:  tea.String(plan.UserName.ValueString()),
-		GroupName: tea.String(plan.GroupName.ValueString()),
-	}
-
-	err := r.addUserToGroup(updateUserGroupRequest)
-	if err != nil {
+	if err := r.addUserToGroup(plan); err != nil {
 		resp.Diagnostics.AddError(
-			"[API ERROR] Failed to Add User to Group",
+			"[API ERROR] Failed to Add User to Group.",
 			err.Error(),
 		)
 		return
@@ -195,21 +183,25 @@ func (r *ramUserGroupAttachmentResource) Delete(ctx context.Context, req resourc
 
 	runtime := &util.RuntimeOptions{}
 
-	_, err := r.client.RemoveUserFromGroupWithOptions(removeUserFromGroupRequest, runtime)
-	if err != nil {
+	if _, err := r.client.RemoveUserFromGroupWithOptions(removeUserFromGroupRequest, runtime); err != nil {
 		resp.Diagnostics.AddError(
 			"[API ERROR] Failed to Remove User from Group",
 			err.Error(),
 		)
+		return
 	}
 }
 
-func (r *ramUserGroupAttachmentResource) addUserToGroup(req *alicloudRamClient.AddUserToGroupRequest) (err error) {
+func (r *ramUserGroupAttachmentResource) addUserToGroup(plan *ramUserGroupAttachmentResourceModel) (err error) {
+	addUserToGroupRequest := &alicloudRamClient.AddUserToGroupRequest{
+		UserName:  tea.String(plan.UserName.ValueString()),
+		GroupName: tea.String(plan.GroupName.ValueString()),
+	}
+
 	addUserToGroup := func() error {
 		runtime := &util.RuntimeOptions{}
 
-		_, err := r.client.AddUserToGroupWithOptions(req, runtime)
-		if err != nil {
+		if _, err := r.client.AddUserToGroupWithOptions(addUserToGroupRequest, runtime); err != nil {
 			if _t, ok := err.(*tea.SDKError); ok {
 				if isAbleToRetry(*_t.Code) {
 					return err
