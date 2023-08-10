@@ -84,19 +84,19 @@ scenario. The reason behind every resources and data sources are stated as below
 
   For namespaces and metric inputs, please refer to: [*Alicloud Alarm Metric List*](https://cms.console.aliyun.com/metric-meta)
 
-**st-alicloud_alidns_instance**
+- **st-alicloud_alidns_instance**
 
-   The official AliCloud Terraform provider's resource
-   [*alicloud_alidns_instance*](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/resources/alidns_instance)
-   will destroy and create a new instance everytime when upgrading or downgrading.
+  The official AliCloud Terraform provider's resource
+  [*alicloud_alidns_instance*](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/resources/alidns_instance)
+  will destroy and create a new instance everytime when upgrading or downgrading.
 
-**st-alicloud_alidns_domain_attachment**
+- **st-alicloud_alidns_domain_attachment**
 
-   The official AliCloud Terraform provider's resource
-   [*alicloud_dns_domain_attachment*](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/resources/dns_domain_attachment)
-   accept input of a list of domains. There will be an issue when upgrading a batch of domains when the existing attachment
-   is more than 100 domains. The official resources will first destroy all the domains and re-add the new one together with
-   the existing one. The resources will hit timeout during adding of new domains and make some of the domains not re-add back.
+  The official AliCloud Terraform provider's resource
+  [*alicloud_dns_domain_attachment*](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/resources/dns_domain_attachment)
+  accept input of a list of domains. There will be an issue when upgrading a batch of domains when the existing attachment
+  is more than 100 domains. The official resources will first destroy all the domains and re-add the new one together with
+  the existing one. The resources will hit timeout during adding of new domains and make some of the domains not re-add back.
 
 - **st-alicloud_cms_system_event_contact_group_attachment**
 
@@ -106,16 +106,18 @@ scenario. The reason behind every resources and data sources are stated as below
 
 - **st-alicloud_ddoscoo_webconfig_ssl_attachment**
 
-  This resource is designed to associate a SSL certificate to a website/domain before being added 
-  into Anti-DDoS as AliCloud Terraform Provider does not support the SSL binding operation. 
-  
+  This resource is designed to associate a SSL certificate to a website/domain before being added
+  into Anti-DDoS as AliCloud Terraform Provider does not support the SSL binding operation.
+
 ### Data Sources
 
 - **st-alicloud_ddoscoo_domain_resources**
 
-  Official AliCloud Terraform provider does not support querying the CNAME of
-  AntiDDoS domain resources through
-  [*alicloud_ddoscoo_domain_resources*](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/data-sources/ddoscoo_domain_resources).
+  - Official AliCloud Terraform provider does not support querying the CNAME of
+    AntiDDoS domain resources through
+    [*alicloud_ddoscoo_domain_resources*](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/data-sources/ddoscoo_domain_resources).
+
+  - Added client_config block to allow overriding the Provider configuration.
 
 - **st-alicloud_ddoscoo_instances**
 
@@ -125,24 +127,28 @@ scenario. The reason behind every resources and data sources are stated as below
 
 - **st-alicloud_cdn_domain**
 
-  Official AliCloud Terraform provider does not have the data source to query
-  the CNAME of CDN domain.
+  - Official AliCloud Terraform provider does not have the data source to query
+    the CNAME of CDN domain.
+
+  - Added client_config block to allow overriding the Provider configuration.
 
 - **st-alicloud_slb_load_balancers**
 
-  The tags parameter of AliCloud API
-  [*DescribeLoadBalancers*](https://www.alibabacloud.com/help/en/server-load-balancer/latest/describeloadbalancers)
-  will return all load balancers when any one of the tags are matched. This may
-  be a problem when the user wants to match exactly all given tags, therefore
-  this data source will filter once more after listing the load balancers
-  from AliCloud API to match all the given tags.
+  - The tags parameter of AliCloud API
+    [*DescribeLoadBalancers*](https://www.alibabacloud.com/help/en/server-load-balancer/latest/describeloadbalancers)
+    will return all load balancers when any one of the tags are matched. This may
+    be a problem when the user wants to match exactly all given tags, therefore
+    this data source will filter once more after listing the load balancers
+    from AliCloud API to match all the given tags.
 
-  The example bahaviors of AliCloud API *DescribeLoadBalancers*:
+    The example bahaviors of AliCloud API *DescribeLoadBalancers*:
 
-  | Load Balancer   | Tags                                            | Given tags: { "location": "office" "env": "test" }          |
-  |-----------------|-------------------------------------------------|-------------------------------------------------------------|
-  | load-balancer-A | { "location": "office" "env" : "test" }         | Matched (work as expected)                                  |
-  | load-balancer-B | { "location": "office" "env" : "prod" }         | Matched (should not be matched as the `env` is prod)          |
+    | Load Balancer   | Tags                                            | Given tags: { "location": "office" "env": "test" }          |
+    |-----------------|-------------------------------------------------|-------------------------------------------------------------|
+    | load-balancer-A | { "location": "office" "env" : "test" }         | Matched (work as expected)                                  |
+    | load-balancer-B | { "location": "office" "env" : "prod" }         | Matched (should not be matched as the `env` is prod)        |
+
+  - Added client_config block to allow overriding the Provider configuration.
 
 References
 ----------

@@ -28,15 +28,18 @@ type slbLoadBalancersDataSource struct {
 }
 
 type slbLoadBalancersDataSourceModel struct {
+	ClientConfig  *clientConfigWithZone     `tfsdk:"client_config"`
 	Name          types.String              `tfsdk:"name"`
 	Tags          types.Map                 `tfsdk:"tags"`
 	LoadBalancers []*slbLoadBalancersDetail `tfsdk:"load_balancers"`
 }
 
 type slbLoadBalancersDetail struct {
-	Id   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
-	Tags types.Map    `tfsdk:"tags"`
+	Id           types.String `tfsdk:"id"`
+	Name         types.String `tfsdk:"name"`
+	MasterZoneId types.String `tfsdk:"master_zone_id"`
+	SlaveZoneId  types.String `tfsdk:"slave_zone_id"`
+	Tags         types.Map    `tfsdk:"tags"`
 }
 
 func (d *slbLoadBalancersDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -45,7 +48,7 @@ func (d *slbLoadBalancersDataSource) Metadata(ctx context.Context, req datasourc
 
 func (d *slbLoadBalancersDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "This data source provides the Server Load Balancers of the current Alibaba Cloud user.",
+		Description: "This data source provides the Server Load Balancers in desired region or user account.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Description: "The name of the SLBs.",
@@ -69,11 +72,46 @@ func (d *slbLoadBalancersDataSource) Schema(ctx context.Context, req datasource.
 							Description: "The name of the SLB.",
 							Computed:    true,
 						},
+						"master_zone_id": schema.StringAttribute{
+							Description: "Master zone of the SLB.",
+							Computed:    true,
+						},
+						"slave_zone_id": schema.StringAttribute{
+							Description: "Slave zone of the SLB.",
+							Computed:    true,
+						},
 						"tags": schema.MapAttribute{
 							Description: "The tags of the SLB.",
 							ElementType: types.StringType,
 							Computed:    true,
 						},
+					},
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"client_config": schema.SingleNestedBlock{
+				Description: "Config to override default client created in Provider. " +
+					"This block will not be recorded in state file.",
+				Attributes: map[string]schema.Attribute{
+					"region": schema.StringAttribute{
+						Description: "The region of the SLBs. Default to use region " +
+							"configured in the provider.",
+						Optional: true,
+					},
+					"zone": schema.StringAttribute{
+						Description: "The master zone of the SLBs.",
+						Optional:    true,
+					},
+					"access_key": schema.StringAttribute{
+						Description: "The access key that have permissions to list " +
+							"SLBs. Default to use access key configured in the provider.",
+						Optional: true,
+					},
+					"secret_key": schema.StringAttribute{
+						Description: "The secret key that have permissions to lsit " +
+							"SLBs. Default to use secret key configured in the provider.",
+						Optional: true,
 					},
 				},
 			},
@@ -91,20 +129,40 @@ func (d *slbLoadBalancersDataSource) Configure(ctx context.Context, req datasour
 
 func (d *slbLoadBalancersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var plan *slbLoadBalancersDataSourceModel
-
 	getPlanDiags := req.Config.Get(ctx, &plan)
 	resp.Diagnostics.Append(getPlanDiags...)
 	if getPlanDiags.HasError() {
 		return
 	}
 
-	pageNumber := 0
+	if plan.ClientConfig == nil {
+		plan.ClientConfig = &clientConfigWithZone{}
+	}
+
+	initClient, clientCredentialsConfig, initClientDiags := initNewClient(&d.client.Client, plan.ClientConfig.getClientConfig())
+	if initClientDiags.HasError() {
+		resp.Diagnostics.Append(initClientDiags...)
+		return
+	}
+	if initClient {
+		var err error
+		d.client, err = alicloudSlbClient.NewClient(clientCredentialsConfig)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to Reinitialize AliCloud SLB API Client",
+				"An unexpected error occurred when creating the AliCloud SLB API client. "+
+					"If the error is not clear, please contact the provider developers.\n\n"+
+					"AliCloud SLB Client Error: "+err.Error(),
+			)
+			return
+		}
+	}
 
 	state := &slbLoadBalancersDataSourceModel{}
 	state.LoadBalancers = []*slbLoadBalancersDetail{}
 
 	describeLoadBalancersRequest := &alicloudSlbClient.DescribeLoadBalancersRequest{
-		RegionId: tea.String(*d.client.RegionId),
+		RegionId: d.client.RegionId,
 		PageSize: tea.Int32(100),
 	}
 
@@ -147,8 +205,14 @@ func (d *slbLoadBalancersDataSource) Read(ctx context.Context, req datasource.Re
 
 			describeLoadBalancersRequest.Tags = tea.String(string(jsonTags))
 		}
+
+		if !(plan.ClientConfig.Zone.IsUnknown() && plan.ClientConfig.Zone.IsNull() && plan.ClientConfig.Zone.String() == "") {
+			describeLoadBalancersRequest.MasterZoneId = tea.String(plan.ClientConfig.Zone.ValueString())
+		}
 	}
 	runtime := &util.RuntimeOptions{}
+
+	pageNumber := 0
 
 	for {
 		pageNumber++
@@ -196,7 +260,7 @@ func (d *slbLoadBalancersDataSource) Read(ctx context.Context, req datasource.Re
 							if !matched {
 								continue slbLoop
 							}
-						// Compare with the input tag value, break if not matched
+							// Compare with the input tag value, break if not matched
 						} else if value != inputTagValue {
 							continue slbLoop
 						}
@@ -206,9 +270,11 @@ func (d *slbLoadBalancersDataSource) Read(ctx context.Context, req datasource.Re
 				}
 
 				slbDetail := &slbLoadBalancersDetail{
-					Id:   types.StringValue(*loadBalancer.LoadBalancerId),
-					Name: types.StringValue(*loadBalancer.LoadBalancerName),
-					Tags: types.MapValueMust(types.StringType, tags),
+					Id:           types.StringValue(*loadBalancer.LoadBalancerId),
+					Name:         types.StringValue(*loadBalancer.LoadBalancerName),
+					MasterZoneId: types.StringValue(*loadBalancer.MasterZoneId),
+					SlaveZoneId:  types.StringValue(*loadBalancer.SlaveZoneId),
+					Tags:         types.MapValueMust(types.StringType, tags),
 				}
 				state.LoadBalancers = append(state.LoadBalancers, slbDetail)
 			}
