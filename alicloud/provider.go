@@ -345,5 +345,6 @@ func (p *alicloudProvider) Resources(_ context.Context) []func() resource.Resour
 		NewCmsSystemEventContactGroupAttachmentResource,
 		NewDdosCooWebconfigSslAttachmentResource,
 		NewEmrMetricAutoScalingRulesResource,
+		NewDdosCooWebAIProtectConfigResource,
 	}
 }
