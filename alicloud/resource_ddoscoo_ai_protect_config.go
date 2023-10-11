@@ -32,37 +32,42 @@ type ddoscooWebAIProtectConfigResource struct {
 }
 
 type ddoscooWebAIProtectConfigModel struct {
-	Domain types.String     `tfsdk:"domain"`
-	AiMode types.String     `tfsdk:"aimode"`
-	AiTemplate types.String `tfsdk:"aitemplate"`
+	Enabled types.Bool  `tfsdk:"enabled"`
+	Domain types.String `tfsdk:"domain"`
+	Mode types.String   `tfsdk:"mode"`
+	Level types.String  `tfsdk:"level"`
 }
 
-// Metadata returns the SSL binding resource name.
+// Metadata returns the web ai protect mode configuration resource name.
 func (r *ddoscooWebAIProtectConfigResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_ddoscoo_web_ai_protect_config"
 }
 
-// Schema defines the schema for the SSL certificate binding resource.
+// Schema defines the schema for the web ai protect mode configuration resource.
 func (r *ddoscooWebAIProtectConfigResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Modify a domain AI Protect Mode in Anti-DDoS website configuration.",
 		Attributes: map[string]schema.Attribute{
+			"enabled": schema.BoolAttribute{
+				Description: "Enable/Disable of ai protect mode status.",
+				Required:    true,
+			},
 			"domain": schema.StringAttribute{
 				Description: "Domain name.",
 				Required:    true,
 			},
-			"aimode": schema.StringAttribute{
-				Description: "config to set AiMode.",
+			"mode": schema.StringAttribute{
+				Description: "config to set Mode.",
 				Required:    true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("watch", "defense"),
+					stringvalidator.OneOf("warning", "protection"),
 				},
 			},
-			"aitemplate": schema.StringAttribute{
-				Description: "config to set AiTemplate.",
+			"level": schema.StringAttribute{
+				Description: "config to set Level.",
 				Required:    true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("level30", "level60", "level90"),
+					stringvalidator.OneOf("loose", "normal", "strict"),
 				},
 			},
 		},
@@ -77,7 +82,7 @@ func (r *ddoscooWebAIProtectConfigResource) Configure(_ context.Context, req res
 	r.client = req.ProviderData.(alicloudClients).antiddosClient
 }
 
-// Create a new SSL cert and domain binding
+// Create a modify web ai protect mode configuration.
 func (r *ddoscooWebAIProtectConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan *ddoscooWebAIProtectConfigModel
@@ -87,7 +92,7 @@ func (r *ddoscooWebAIProtectConfigResource) Create(ctx context.Context, req reso
 		return
 	}
 
-	// Bind SSL cert with domain
+	// Modify Web AI Protect Mode.
 	err := r.modifyAIProtectMode(plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -97,11 +102,12 @@ func (r *ddoscooWebAIProtectConfigResource) Create(ctx context.Context, req reso
 		return
 	}
 
-	// Set state items
+	// Set state items.
 	state := &ddoscooWebAIProtectConfigModel{
+		Enabled: plan.Enabled,
 		Domain: plan.Domain,
-		AiMode: plan.AiMode,
-		AiTemplate: plan.AiTemplate,
+		Mode: plan.Mode,
+		Level: plan.Level,
 	}
 
 	// Set state to fully populated data
@@ -112,7 +118,7 @@ func (r *ddoscooWebAIProtectConfigResource) Create(ctx context.Context, req reso
 	}
 }
 
-// Read web ai protect mode configuration for domain
+// Read web ai protect configuration for domain.
 func (r *ddoscooWebAIProtectConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
 	var state *ddoscooWebAIProtectConfigModel
@@ -122,7 +128,7 @@ func (r *ddoscooWebAIProtectConfigResource) Read(ctx context.Context, req resour
 		return
 	}
 
-	// Retry backoff function
+	// Retry backoff function.
 	readWebAIProtectMode := func() error {
 		runtime := &util.RuntimeOptions{}
 
@@ -144,8 +150,32 @@ func (r *ddoscooWebAIProtectConfigResource) Read(ctx context.Context, req resour
 		}
 
 		if len(webCcProtectSwitch.Body.ProtectSwitchList)  > 0 {
-			state.AiMode = types.StringValue(*webCcProtectSwitch.Body.ProtectSwitchList[0].AiMode)
-			state.AiTemplate = types.StringValue(*webCcProtectSwitch.Body.ProtectSwitchList[0].AiTemplate)
+			//convert from aliyun antiddos web ai protect sdk AiRuleEnable keyword to readable variable (Enabled).
+			switch *webCcProtectSwitch.Body.ProtectSwitchList[0].AiRuleEnable {
+			case 0:
+				state.Enabled = types.BoolValue(false)
+			case 1:
+				state.Enabled = types.BoolValue(true)
+			}
+
+			//convert from aliyun antiddos web ai protect sdk AiMode keyword to readable variable (Mode).
+			switch *webCcProtectSwitch.Body.ProtectSwitchList[0].AiMode {
+			case "watch":
+				state.Mode = types.StringValue("warning")
+			case "defense":
+				state.Mode = types.StringValue("protection")
+			}
+
+			//convert from aliyun antiddos web ai protect sdk AiTemplate keyword to readable variable (Level).
+			switch *webCcProtectSwitch.Body.ProtectSwitchList[0].AiTemplate {
+			case "level30":
+				state.Level = types.StringValue("loose")
+			case "level60":
+				state.Level = types.StringValue("normal")
+			case "level90":
+				state.Level = types.StringValue("strict")
+			}
+
 			state.Domain = types.StringValue(*webCcProtectSwitch.Body.ProtectSwitchList[0].Domain)
 
 			// Set refreshed state
@@ -179,7 +209,7 @@ func (r *ddoscooWebAIProtectConfigResource) Read(ctx context.Context, req resour
 
 }
 
-// Update binds new SSL cert to domain and sets the updated Terraform state on success.
+// Update web ai protect configuration and sets the updated Terraform state on success.
 func (r *ddoscooWebAIProtectConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan *ddoscooWebAIProtectConfigModel
 
@@ -202,9 +232,10 @@ func (r *ddoscooWebAIProtectConfigResource) Update(ctx context.Context, req reso
 
 	// Set state items
 	state := &ddoscooWebAIProtectConfigModel{
+		Enabled: plan.Enabled,
 		Domain: plan.Domain,
-		AiMode: plan.AiMode,
-		AiTemplate: plan.AiTemplate,
+		Mode: plan.Mode,
+		Level: plan.Level,
 	}
 
 	// Set state to fully populated data
@@ -228,15 +259,45 @@ func (r *ddoscooWebAIProtectConfigResource) Delete(ctx context.Context, req reso
 
 // Function to modify AI Protection Mode for domain
 func (r *ddoscooWebAIProtectConfigResource) modifyAIProtectMode(plan *ddoscooWebAIProtectConfigModel) error {
-	modifyAIProtect := func() error {
-		runtime := &util.RuntimeOptions{}
+	level   := plan.Level.ValueString()
+	mode    := plan.Mode.ValueString()
+	enabled := map[bool]int{false: 0, true: 1}[plan.Enabled.ValueBool()]
+	modifyAIProtectConfig := func() error {
+	runtime := &util.RuntimeOptions{}
+
+		//convert input (level) to aliyun antiddos web ai protect sdk AiTemplate needed keyword ("level30"/"level60"/"level90").
+		switch level {
+		case "loose":
+			level = "level30"
+		case "normal":
+			level = "level60"
+		case "strict":
+			level = "level90"
+		}
+
+		//convert input (mode) to aliyun antiddos web ai protect sdk AiMode needed keyword ("watch"/"defense").
+		switch mode {
+		case "warning":
+			mode = "watch"
+		case "protection":
+			mode = "defense"
+		}
+
+		modifyWebAIProtectSwitchRequest := &alicloudAntiddosClient.ModifyWebAIProtectSwitchRequest{
+			Config: tea.String(fmt.Sprintf("{\"AiRuleEnable\": %d}",enabled)),
+			Domain: tea.String(plan.Domain.ValueString()),
+		  }
+		  _, _err := r.client.ModifyWebAIProtectSwitchWithOptions(modifyWebAIProtectSwitchRequest, runtime)
+		  if _err != nil {
+			return _err
+		  }
 
 		modifyWebAIProtectModeRequest := &alicloudAntiddosClient.ModifyWebAIProtectModeRequest{
 			Domain: tea.String(plan.Domain.ValueString()),
-			Config: tea.String(fmt.Sprintf("{\"AiTemplate\":\"%s\",\"AiMode\":\"%s\"}", plan.AiTemplate.ValueString(),plan.AiMode.ValueString())),
+			Config: tea.String(fmt.Sprintf("{\"AiTemplate\":\"%s\",\"AiMode\":\"%s\"}", level, mode)),
 		}
 
-		_, _err := r.client.ModifyWebAIProtectModeWithOptions(modifyWebAIProtectModeRequest, runtime)
+		_, _err = r.client.ModifyWebAIProtectModeWithOptions(modifyWebAIProtectModeRequest, runtime)
 		if _err != nil {
 			if _t, ok := _err.(*tea.SDKError); ok {
 				if isAbleToRetry(*_t.Code) {
@@ -254,7 +315,7 @@ func (r *ddoscooWebAIProtectConfigResource) modifyAIProtectMode(plan *ddoscooWeb
 	// Retry backoff
 	reconnectBackoff := backoff.NewExponentialBackOff()
 	reconnectBackoff.MaxElapsedTime = 30 * time.Second
-	err := backoff.Retry(modifyAIProtect, reconnectBackoff)
+	err := backoff.Retry(modifyAIProtectConfig, reconnectBackoff)
 	if err != nil {
 		return err
 	}

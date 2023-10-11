@@ -117,6 +117,11 @@ scenario. The reason behind every resources and data sources are stated as below
   This resource is designed to create auto scaling rules for AliCloud E-MapReduce cluster as the provider's resource [*alicloud_emrv2_cluster*](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/resources/emrv2_cluster)
   does not provide the option to create auto scaling rules for nodes. (Note: Only task nodes are eligible for auto scaling)
 
+- **st-alicloud_ddoscoo_web_ai_protect_config**
+
+  This resource is designed to modify antiddos Web AI Protect Mode Config from Protection to Warning for a website/domain before being added into Anti-DDoS webconfig as AliCloud Terraform Provider does not support
+  the modify AI Protect Mode operation.
+
 ### Data Sources
 
 - **st-alicloud_ddoscoo_domain_resources**
