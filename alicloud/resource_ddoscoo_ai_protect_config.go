@@ -57,14 +57,14 @@ func (r *ddoscooWebAIProtectConfigResource) Schema(_ context.Context, _ resource
 				Required:    true,
 			},
 			"mode": schema.StringAttribute{
-				Description: "config to set Mode.",
+				Description: "config to set AiMode.",
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("warning", "protection"),
 				},
 			},
 			"level": schema.StringAttribute{
-				Description: "config to set Level.",
+				Description: "config to set AiTemplate.",
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("loose", "normal", "strict"),
