@@ -3,20 +3,21 @@
 page_title: "st-alicloud_ddoscoo_web_ai_protect_config Resource - st-alicloud"
 subcategory: ""
 description: |-
-  Modify a domain AI Protect Mode in Anti-DDoS website configuration.
+  Modify AI Protect Mode in Anti-DDoS configuration.
 ---
 
 # st-alicloud_ddoscoo_web_ai_protect_config (Resource)
 
-Modify a domain AI Protect Mode in Anti-DDoS website configuration.
+Modify AI Protect Mode in Anti-DDoS configuration.
 
 ## Example Usage
 
 ```terraform
 resource "st-alicloud_ddoscoo_web_ai_protect_config" "test" {
+  enabled = true 
   domain  = "api.xxx.com"
-  aimode = "watch"
-  aitemplate = "level60"
+  mode    = "warning"
+  level   = "normal"
 }
 ```
 
@@ -25,8 +26,7 @@ resource "st-alicloud_ddoscoo_web_ai_protect_config" "test" {
 
 ### Required
 
-- `aimode` (String) config to set AiMode.
-- `aitemplate` (String) config to set AiTemplate.
+- `enabled` (Boolean) Enable/Disable of AI Protect Mode status. <br/>**Valid values**: `true`, `false`.
 - `domain` (String) Domain name.
-
-
+- `mode` (String) config to set AiMode. <br/>**Valid values**: `warning`, `protection`.
+- `level` (String) config to set AiTemplate. <br/>**Valid values**: `loose`, `normal`, `strict`.
