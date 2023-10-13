@@ -196,7 +196,7 @@ func (r *ddoscooWebAIProtectConfigResource) Read(ctx context.Context, req resour
 
 	// Retry backoff
 	reconnectBackoff := backoff.NewExponentialBackOff()
-	reconnectBackoff.MaxElapsedTime = 30 * time.Second
+	reconnectBackoff.MaxElapsedTime = 60 * time.Second
 
 	err := backoff.Retry(readWebAIProtectMode, reconnectBackoff)
 	if err != nil {
@@ -262,42 +262,17 @@ func (r *ddoscooWebAIProtectConfigResource) modifyAIProtectMode(plan *ddoscooWeb
 	level   := plan.Level.ValueString()
 	mode    := plan.Mode.ValueString()
 	enabled := map[bool]int{false: 0, true: 1}[plan.Enabled.ValueBool()]
-	modifyAIProtectConfig := func() error {
-	runtime := &util.RuntimeOptions{}
 
-		//convert input (level) to aliyun antiddos web ai protect sdk AiTemplate needed keyword ("level30"/"level60"/"level90").
-		switch level {
-		case "loose":
-			level = "level30"
-		case "normal":
-			level = "level60"
-		case "strict":
-			level = "level90"
-		}
+	enableAIProtectConfig := func() error {
+		runtime := &util.RuntimeOptions{}
 
-		//convert input (mode) to aliyun antiddos web ai protect sdk AiMode needed keyword ("watch"/"defense").
-		switch mode {
-		case "warning":
-			mode = "watch"
-		case "protection":
-			mode = "defense"
-		}
-
+		// enable/disable antiddos web ai protect configuration
 		modifyWebAIProtectSwitchRequest := &alicloudAntiddosClient.ModifyWebAIProtectSwitchRequest{
 			Config: tea.String(fmt.Sprintf("{\"AiRuleEnable\": %d}",enabled)),
 			Domain: tea.String(plan.Domain.ValueString()),
-		  }
-		  _, _err := r.client.ModifyWebAIProtectSwitchWithOptions(modifyWebAIProtectSwitchRequest, runtime)
-		  if _err != nil {
-			return _err
-		  }
-
-		modifyWebAIProtectModeRequest := &alicloudAntiddosClient.ModifyWebAIProtectModeRequest{
-			Domain: tea.String(plan.Domain.ValueString()),
-			Config: tea.String(fmt.Sprintf("{\"AiTemplate\":\"%s\",\"AiMode\":\"%s\"}", level, mode)),
 		}
 
-		_, _err = r.client.ModifyWebAIProtectModeWithOptions(modifyWebAIProtectModeRequest, runtime)
+		_, _err := r.client.ModifyWebAIProtectSwitchWithOptions(modifyWebAIProtectSwitchRequest, runtime)
 		if _err != nil {
 			if _t, ok := _err.(*tea.SDKError); ok {
 				if isAbleToRetry(*_t.Code) {
@@ -312,10 +287,58 @@ func (r *ddoscooWebAIProtectConfigResource) modifyAIProtectMode(plan *ddoscooWeb
 		return nil
 	}
 
+	modifyAIProtectConfig := func() error {
+		runtime := &util.RuntimeOptions{}
+
+			//convert input (level) to aliyun antiddos web ai protect sdk AiTemplate needed keyword ("level30"/"level60"/"level90").
+			switch level {
+			case "loose":
+				level = "level30"
+			case "normal":
+				level = "level60"
+			case "strict":
+				level = "level90"
+			}
+
+			//convert input (mode) to aliyun antiddos web ai protect sdk AiMode needed keyword ("watch"/"defense").
+			switch mode {
+			case "warning":
+				mode = "watch"
+			case "protection":
+				mode = "defense"
+			}
+
+			// modify antiddos web ai protect mode configuration
+			modifyWebAIProtectModeRequest := &alicloudAntiddosClient.ModifyWebAIProtectModeRequest{
+				Domain: tea.String(plan.Domain.ValueString()),
+				Config: tea.String(fmt.Sprintf("{\"AiTemplate\":\"%s\",\"AiMode\":\"%s\"}", level, mode)),
+			}
+
+			_, _err := r.client.ModifyWebAIProtectModeWithOptions(modifyWebAIProtectModeRequest, runtime)
+			if _err != nil {
+				if _t, ok := _err.(*tea.SDKError); ok {
+					if isAbleToRetry(*_t.Code) {
+						return _err
+					} else {
+						return backoff.Permanent(_err)
+					}
+				} else {
+					return _err
+				}
+			}
+			return nil
+	}
+
 	// Retry backoff
 	reconnectBackoff := backoff.NewExponentialBackOff()
-	reconnectBackoff.MaxElapsedTime = 30 * time.Second
-	err := backoff.Retry(modifyAIProtectConfig, reconnectBackoff)
+	reconnectBackoff.MaxElapsedTime = 60 * time.Second
+	err := backoff.Retry(enableAIProtectConfig, reconnectBackoff)
+	if err != nil {
+		return err
+	}
+
+	reconnectBackoff.MaxElapsedTime = 60 * time.Second
+	err = backoff.Retry(modifyAIProtectConfig, reconnectBackoff)
 	if err != nil {
 		return err
 	}
