@@ -251,7 +251,7 @@ func (r *ddoscooWebconfigSslAttachmentResource) bindCert(plan *ddoscooWebconfigS
 		runtime := &util.RuntimeOptions{}
 
 		// Wait for the SSL crt to be fully created and ready before binding to AliCloud AntiDDoS Webconfig.
-		time.Sleep(20 * time.Second)
+		time.Sleep(10 * time.Second)
 
 		// bind ssl crt to anitddos webconfig
 		associateWebCertRequest := &alicloudAntiddosClient.AssociateWebCertRequest{
