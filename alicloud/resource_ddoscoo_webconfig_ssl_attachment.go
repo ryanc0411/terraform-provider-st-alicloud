@@ -48,7 +48,7 @@ func (r *ddoscooWebconfigSslAttachmentResource) Metadata(_ context.Context, req 
 // Schema defines the schema for the SSL certificate binding resource.
 func (r *ddoscooWebconfigSslAttachmentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Associate the domain with the TLS version of the SSL certificate and cipher suite in the Anti-DDoS website configuration.",
+		Description: "Associate the domain with the TLS version of the SSL certificate and cipher suite in the Anti-DDoS website configuration. [Document](https://www.alibabacloud.com/help/en/ddos-protection/latest/api-ddoscoo-2020-01-01-modifytlsconfig?spm=a2c63.p38356.0.0.419b504fICZVeU)",
 		Attributes: map[string]schema.Attribute{
 			"domain": schema.StringAttribute{
 				Description: "Domain name.",
