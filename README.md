@@ -106,7 +106,7 @@ scenario. The reason behind every resources and data sources are stated as below
 - **st-alicloud_ddoscoo_webconfig_ssl_attachment**
 
   This resource is designed to associate a SSL certificate to a website/domain before being added
-  into Anti-DDoS as AliCloud Terraform Provider does not support the SSL binding operation.
+  into Anti-DDoS and Modify TLS Security Settings as AliCloud Terraform Provider does not support the SSL binding & modify TLS Security Settings operation.
 
 - **st-alicloud_aliadb_resource_group_bind_user**
 

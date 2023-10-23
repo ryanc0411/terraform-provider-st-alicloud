@@ -306,7 +306,6 @@ func (r *ddoscooWebconfigSslAttachmentResource) bindCert(plan *ddoscooWebconfigS
 		return err
 	}
 
-	reconnectBackoff.MaxElapsedTime = 60 * time.Second
 	err = backoff.Retry(modifySSLCert, reconnectBackoff)
 	if err != nil {
 		return err
