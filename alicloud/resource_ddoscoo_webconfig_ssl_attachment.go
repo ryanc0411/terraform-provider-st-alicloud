@@ -48,7 +48,7 @@ func (r *ddoscooWebconfigSslAttachmentResource) Metadata(_ context.Context, req 
 // Schema defines the schema for the SSL certificate binding resource.
 func (r *ddoscooWebconfigSslAttachmentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Associate the domain with the tls version of the SSL certificate and cipher suite in the Anti-DDoS website configuration.",
+		Description: "Associate the domain with the TLS version of the SSL certificate and cipher suite in the Anti-DDoS website configuration.",
 		Attributes: map[string]schema.Attribute{
 			"domain": schema.StringAttribute{
 				Description: "Domain name.",
@@ -277,7 +277,7 @@ func (r *ddoscooWebconfigSslAttachmentResource) bindCert(plan *ddoscooWebconfigS
 	modifySSLCert := func() error {
 		runtime := &util.RuntimeOptions{}
 
-		// modify antiddos webconfig ssl cert tls version & cipher suites
+		// modify antiddos webconfig ssl cert TLS version & cipher suites
 		modifyTlsConfigRequest := &alicloudAntiddosClient.ModifyTlsConfigRequest{
 			Domain: tea.String(plan.Domain.ValueString()),
 			Config: tea.String(fmt.Sprintf("{\"ssl_protocols\":\"%s\",\"ssl_ciphers\":\"%s\"}", plan.TlsVersion.ValueString(), plan.CipherSuites.ValueString())),

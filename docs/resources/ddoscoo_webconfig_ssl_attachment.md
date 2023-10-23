@@ -3,12 +3,12 @@
 page_title: "st-alicloud_ddoscoo_webconfig_ssl_attachment Resource - st-alicloud"
 subcategory: ""
 description: |-
-  Associate the domain with the tls version of the SSL certificate and cipher suite in the Anti-DDoS website configuration.
+  Associate the domain with the TLS version of the SSL certificate and cipher suite in the Anti-DDoS website configuration.
 ---
 
 # st-alicloud_ddoscoo_webconfig_ssl_attachment (Resource)
 
-Associate the domain with the tls version of the SSL certificate and cipher suite in the Anti-DDoS website configuration.
+Associate the domain with the TLS version of the SSL certificate and cipher suite in the Anti-DDoS website configuration.
 
 ## Example Usage
 
