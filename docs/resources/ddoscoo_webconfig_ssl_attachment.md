@@ -28,5 +28,7 @@ resource "st-alicloud_ddoscoo_webconfig_ssl_attachment" "bind_ssl" {
 
 - `cert_id` (Number) SSL Certificate ID.
 - `domain` (String) Domain name.
-- `tls_version` (String) TLS Versions for SSL Certificate. <br/>**Valid values**: `tls1.0`, `tls1.1`, `tls1.2` .
-- `cipher_suites` (String) Cipher Suites for SSL Certificate. <br/>**Valid values**: `all`, `strong`, `default`, `improved`. <br/> `tls1.0` & `tls1.1` only can accept `all`, `strong`, `default`. <br/> Only `tls1.2` can support up to `all`, `strong`, `default`, `improved`.
+
+### Optional
+- `tls_version` (String) TLS Versions for SSL Certificate. <br/>**Valid values**: `tls1.0`, `tls1.1`, `tls1.2` . default to `tls1.0`.
+- `cipher_suites` (String) Cipher Suites for SSL Certificate. <br/>**Valid values**: `all`, `strong`, `default`, `improved`. <br/> `tls1.0` & `tls1.1` only can accept `all`, `strong`, `default`. <br/> Only `tls1.2` can support up to `all`, `strong`, `default`, `improved`. default to `default`.

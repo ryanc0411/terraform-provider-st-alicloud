@@ -13,6 +13,7 @@ import (
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -60,17 +61,21 @@ func (r *ddoscooWebconfigSslAttachmentResource) Schema(_ context.Context, _ reso
 			},
 			"tls_version": schema.StringAttribute{
 				Description: "TLS Versions for SSL Certificate.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("tls1.0", "tls1.1", "tls1.2"),
 				},
+				Default: stringdefault.StaticString("tls1.0"),
 			},
 			"cipher_suites": schema.StringAttribute{
 				Description: "Cipher Suites for SSL Certificate.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("all", "improved", "strong", "default"),
 				},
+				Default: stringdefault.StaticString("default"),
 			},
 		},
 	}

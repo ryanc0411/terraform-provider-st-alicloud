@@ -11,6 +11,7 @@ import (
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -58,17 +59,21 @@ func (r *ddoscooWebAIProtectConfigResource) Schema(_ context.Context, _ resource
 			},
 			"mode": schema.StringAttribute{
 				Description: "config to set AiMode.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("warning", "protection"),
 				},
+				Default: stringdefault.StaticString("protection"),
 			},
 			"level": schema.StringAttribute{
 				Description: "config to set AiTemplate.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("loose", "normal", "strict"),
 				},
+				Default: stringdefault.StaticString("normal"),
 			},
 		},
 	}
