@@ -28,5 +28,7 @@ resource "st-alicloud_ddoscoo_web_ai_protect_config" "test" {
 
 - `enabled` (Boolean) Enable/Disable of AI Protect Mode status. <br/>**Valid values**: `true`, `false`.
 - `domain` (String) Domain name.
-- `mode` (String) config to set AiMode. <br/>**Valid values**: `warning`, `protection`.
-- `level` (String) config to set AiTemplate. <br/>**Valid values**: `loose`, `normal`, `strict`.
+
+### Optional
+- `mode` (String) config to set AiMode. <br/>**Valid values**: `warning`, `protection`. default to `protection`.
+- `level` (String) config to set AiTemplate. <br/>**Valid values**: `loose`, `normal`, `strict`. default to `normal`.
