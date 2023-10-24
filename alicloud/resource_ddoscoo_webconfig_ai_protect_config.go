@@ -41,7 +41,7 @@ type ddoscooWebAIProtectConfigModel struct {
 
 // Metadata returns the web ai protect mode configuration resource name.
 func (r *ddoscooWebAIProtectConfigResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_ddoscoo_web_ai_protect_config"
+	resp.TypeName = req.ProviderTypeName + "_ddoscoo_webconfig_ai_protect_config"
 }
 
 // Schema defines the schema for the web ai protect mode configuration resource.
